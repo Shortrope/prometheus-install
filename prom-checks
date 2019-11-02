@@ -8,7 +8,9 @@ mag=$'\e[1;35m'
 cyn=$'\e[1;36m'
 wht=$'\e[1;0m'
 
+prometheus_version=2.13.1
 
+# Config eth1
 if [[ -e /etc/sysconfig/network-scripts/ifcfg-eth1 ]]; then
     echo "${grn}ifcfg-eth1 exists"
 else
@@ -19,5 +21,15 @@ if [[ $(ifconfig eth1 | grep RUNNING| wc -l) == 1 ]]; then
 else
     echo "${red}eth1 interface up and running"
 fi
+
+# Download package
+if [[ -d /tmp/prometheus-${prometheus_version}.linux-amd64 ]]; then
+    echo "${grn}Prometheus package downloaded and extracted"
+else
+    echo "${red}Prometheus package downloaded and extracted"
+fi
+
+
+
 
 echo "${wht}"

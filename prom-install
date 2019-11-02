@@ -2,6 +2,8 @@
 # Check for parameters: IP and gateway addresses
 ip=192.168.1.15
 gw=192.168.1.254
+prometheus_version=2.13.1
+
 
 # Create ifcfg-eth1 file
 cat << EOF > /etc/sysconfig/network-scripts/ifcfg-eth1
@@ -21,3 +23,8 @@ IPV6INIT="no"
 EOF
 
 ifup eth1
+
+# Download and extract Prometheus package
+cd /tmp
+wget https://github.com/prometheus/prometheus/releases/download/v${prometheus_version}/prometheus-${prometheus_version}.linux-amd64.tar.gz
+tar -xvf prometheus-${prometheus_version}.linux-amd64.tar.gz
