@@ -90,6 +90,24 @@ else
     echo "${red}NOT listening on 0.0.0.0:9090"
 fi
 
+echo ""
+echo "${wht}Check systemd service:"
+if [[ -f /etc/systemd/system/prometheus.service ]]; then
+    echo "${grn}prometheus.service file exists"
+else
+    echo "${red}prometheus.service file does NOT exist"
+fi
+
+if [[ -L /etc/systemd/system/multi-user.target.wants/prometheus.service ]]; then
+    echo "${grn}prometheus service is enabled"
+else
+    echo "${red}prometheus service is NOT enabled"
+fi
+
+systemctl is-active --quiet prometheus &&
+    echo "${grn}prometheus service is running" ||
+    echo "${red}prometheus service is NOT running"
+
 
 echo ""
 echo ""

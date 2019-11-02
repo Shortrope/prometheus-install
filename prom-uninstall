@@ -9,6 +9,11 @@ rm /etc/sysconfig/network-scripts/ifcfg-eth1
 
 #rm -rf /tmp/prometheus*
 
+# must stop the prometheus service before removing the prometheus user
+systemctl stop prometheus
+systemctl disable prometheus
+rm /etc/systemd/system/prometheus.service
+
 userdel prometheus
 
 rm -rf /etc/prometheus
@@ -16,3 +21,4 @@ rm -rf /var/lib/prometheus
 
 rm /usr/local/bin/prometheus
 rm /usr/local/bin/promtool
+
