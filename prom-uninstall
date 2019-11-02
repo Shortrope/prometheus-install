@@ -9,3 +9,8 @@ rm /etc/sysconfig/network-scripts/ifcfg-eth1
 
 rm -rf /tmp/prometheus*
 
+userdel prometheus
+
+rm -rf /etc/prometheus
+rm -rf /var/lib/prometheus
+

@@ -28,3 +28,10 @@ ifup eth1
 cd /tmp
 wget https://github.com/prometheus/prometheus/releases/download/v${prometheus_version}/prometheus-${prometheus_version}.linux-amd64.tar.gz
 tar -xvf prometheus-${prometheus_version}.linux-amd64.tar.gz
+
+# Create Prometheus User and service directories
+useradd --no-create-home --shell /bin/false prometheus
+mkdir /etc/prometheus
+mkdir /var/lib/prometheus
+chown prometheus:prometheus /var/lib/prometheus
+

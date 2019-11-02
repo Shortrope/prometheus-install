@@ -14,22 +14,39 @@ prometheus_version=2.13.1
 if [[ -e /etc/sysconfig/network-scripts/ifcfg-eth1 ]]; then
     echo "${grn}ifcfg-eth1 exists"
 else
-    echo "${red}ifcfg-eth1 exists"
+    echo "${red}ifcfg-eth1 does NOT exist"
 fi
 if [[ $(ifconfig eth1 | grep RUNNING| wc -l) == 1 ]]; then
     echo "${grn}eth1 interface up and running"
 else
-    echo "${red}eth1 interface up and running"
+    echo "${red}eth1 interface NOT up and running"
 fi
 
 # Download package
 if [[ -d /tmp/prometheus-${prometheus_version}.linux-amd64 ]]; then
     echo "${grn}Prometheus package downloaded and extracted"
 else
-    echo "${red}Prometheus package downloaded and extracted"
+    echo "${red}Prometheus package NOT downloaded and extracted"
 fi
 
+# create Prometheus user
+if id prometheus > /dev/null 2>&1; then
+    echo "${grn}'prometheus' user exists"
+else
+    echo "${red}'prometheus' user does NOT exist"
+fi
 
+# prometheus service directories
+if [[ -d /etc/prometheus ]]; then
+    echo "${grn}directory '/etc/prometheus' exists"
+else
+    echo "${red}directory '/etc/prometheus' does NOT exist"
+fi
 
+if [[ -d /var/lib/prometheus ]]; then
+    echo "${grn}directory '/var/lib/prometheus' exists"
+else
+    echo "${red}directory '/var/lib/prometheus' does NOT exist"
+fi
 
 echo "${wht}"
