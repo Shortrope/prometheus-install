@@ -11,6 +11,7 @@ wht=$'\e[1;0m'
 prometheus_version=2.13.1
 
 # Config eth1
+echo "${wht}Check bridged NIC:"
 if [[ -e /etc/sysconfig/network-scripts/ifcfg-eth1 ]]; then
     echo "${grn}ifcfg-eth1 exists"
 else
@@ -23,6 +24,8 @@ else
 fi
 
 # Download package
+echo ""
+echo "${wht}Check prometheus package downloaded and extracted:"
 if [[ -d /tmp/prometheus-${prometheus_version}.linux-amd64 ]]; then
     echo "${grn}Prometheus package downloaded and extracted"
 else
@@ -30,23 +33,59 @@ else
 fi
 
 # create Prometheus user
+echo ""
+echo "${wht}Check prometheus user created:"
 if id prometheus > /dev/null 2>&1; then
     echo "${grn}'prometheus' user exists"
 else
     echo "${red}'prometheus' user does NOT exist"
 fi
 
-# prometheus service directories
-if [[ -d /etc/prometheus ]]; then
-    echo "${grn}directory '/etc/prometheus' exists"
-else
-    echo "${red}directory '/etc/prometheus' does NOT exist"
-fi
 
-if [[ -d /var/lib/prometheus ]]; then
-    echo "${grn}directory '/var/lib/prometheus' exists"
-else
-    echo "${red}directory '/var/lib/prometheus' does NOT exist"
-fi
+# prometheus service files
+prometheus_dirs=(/etc/prometheus /etc/prometheus/consoles /etc/prometheus/console_libraries /var/lib/prometheus)
+prometheus_files=(/etc/prometheus/prometheus.yml /usr/local/bin/prometheus /usr/local/bin/promtool)
+
+echo ""
+echo "${wht}Check directory owner:group:"
+for d in ${prometheus_dirs[@]}; do
+    if [[ -d $d ]] && 
+       [[ $(stat -c %U $d) == "prometheus" ]] &&
+       [[ $(ls -ld $d | awk '{print $4}') == "prometheus" ]]; then
+         echo "${grn}$d  Goot"
+    else
+         echo "${red}$d  NOT goot"
+    fi
+done
+
+echo ""
+echo "${wht}Check file owner:group:"
+for f in ${prometheus_files[@]}; do
+    if [[ -f $f ]] &&
+       [[ $(stat -c %U $f) == "prometheus" ]] &&
+       [[ $(ls -l $f | awk '{print $4}') == "prometheus" ]]; then
+         echo "${grn}$f  Goot"
+    else
+         echo "${red}$f  NOT goot"
+    fi
+done
+
+echo ""
+echo "${wht}Check executable files:"
+for f in ${prometheus_files[@]}; do
+    if [[ -x $f ]]; then
+         echo "${grn}$f  executable"
+    else
+         if [[ $f == "/etc/prometheus/prometheus.yml" ]]; then continue; fi
+         echo "${red}$f  NOT executable"
+    fi
+done
+
+
+echo ""
+echo ""
+
+
 
 echo "${wht}"
+

@@ -14,3 +14,5 @@ userdel prometheus
 rm -rf /etc/prometheus
 rm -rf /var/lib/prometheus
 
+rm /usr/local/bin/prometheus
+rm /usr/local/bin/promtool

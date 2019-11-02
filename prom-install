@@ -29,9 +29,23 @@ cd /tmp
 wget https://github.com/prometheus/prometheus/releases/download/v${prometheus_version}/prometheus-${prometheus_version}.linux-amd64.tar.gz
 tar -xvf prometheus-${prometheus_version}.linux-amd64.tar.gz
 
-# Create Prometheus User and service directories
+# Create Prometheus User
 useradd --no-create-home --shell /bin/false prometheus
+
+# create directories
 mkdir /etc/prometheus
 mkdir /var/lib/prometheus
+
+# Move files to proper locations
+cd /tmp/prometheus-${prometheus_version}.linux-amd64  
+mv console* /etc/prometheus/
+mv prometheus.yml /etc/prometheus/
+mv prometheus promtool /usr/local/bin/
+
+# Set directoy and file owner:group
+
+chown -R prometheus:prometheus /etc/prometheus/
 chown prometheus:prometheus /var/lib/prometheus
+chown prometheus:prometheus /usr/local/bin/prometheus
+chown prometheus:prometheus /usr/local/bin/promtool
 
