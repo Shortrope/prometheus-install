@@ -1,0 +1,4 @@
+#!/bin/bash
+
+ifdown eth1
+rm /etc/sysconfig/network-scripts/ifcfg-eth1

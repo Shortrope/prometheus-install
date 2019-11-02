@@ -1,0 +1,23 @@
+#!/bin/bash
+## File: prom-checks
+
+# Text color
+red=$'\e[1;31m'
+grn=$'\e[1;32m'
+mag=$'\e[1;35m'
+cyn=$'\e[1;36m'
+wht=$'\e[1;0m'
+
+
+if [[ -e /etc/sysconfig/network-scripts/ifcfg-eth1 ]]; then
+    echo "${grn}ifcfg-eth1 exists"
+else
+    echo "${red}ifcfg-eth1 exists"
+fi
+if [[ $(ifconfig eth1 | grep RUNNING| wc -l) == 1 ]]; then
+    echo "${grn}eth1 interface up and running"
+else
+    echo "${red}eth1 interface up and running"
+fi
+
+echo "${wht}"
