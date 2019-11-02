@@ -26,7 +26,7 @@ ifup eth1
 
 # Download and extract Prometheus package
 cd /tmp
-wget https://github.com/prometheus/prometheus/releases/download/v${prometheus_version}/prometheus-${prometheus_version}.linux-amd64.tar.gz
+#wget https://github.com/prometheus/prometheus/releases/download/v${prometheus_version}/prometheus-${prometheus_version}.linux-amd64.tar.gz
 tar -xvf prometheus-${prometheus_version}.linux-amd64.tar.gz
 
 # Create Prometheus User
@@ -49,3 +49,5 @@ chown prometheus:prometheus /var/lib/prometheus
 chown prometheus:prometheus /usr/local/bin/prometheus
 chown prometheus:prometheus /usr/local/bin/promtool
 
+# Edit prometheus.yml file to allow access from local LAN
+sed -i.mak 's/localhost:9090/0.0.0.0:9090/' /etc/prometheus/prometheus.yml
