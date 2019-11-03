@@ -62,7 +62,7 @@ chown prometheus:prometheus /usr/local/bin/prometheus
 chown prometheus:prometheus /usr/local/bin/promtool
 
 # Edit prometheus.yml file to allow access from local LAN
-sed -i.mak 's/localhost:9090/0.0.0.0:9090/' /etc/prometheus/prometheus.yml
+#sed -i.mak 's/localhost:9090/0.0.0.0:9090/' /etc/prometheus/prometheus.yml
 
 # Create service file
 cat <<EOF > /etc/systemd/system/prometheus.service

@@ -87,15 +87,7 @@ for f in ${prometheus_files[@]}; do
     fi
 done
 
-# Check 0.0.0.0 addr in prometheus.yml file
-echo ""
-echo "${wht}Check .yml target listens on 0.0.0.0:"
-if [[ $(grep 0.0.0.0:9090 /etc/prometheus/prometheus.yml) ]]; then
-    echo "${grn}Listening on 0.0.0.0:9090"
-else
-    echo "${red}NOT listening on 0.0.0.0:9090"
-fi
-
+# Check prometheus.service is enabled and running
 echo ""
 echo "${wht}Check systemd service:"
 if [[ -f /etc/systemd/system/prometheus.service ]]; then
