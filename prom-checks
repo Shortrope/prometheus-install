@@ -22,6 +22,12 @@ if [[ $(ifconfig eth1 | grep RUNNING| wc -l) == 1 ]]; then
 else
     echo "${red}eth1 interface NOT up and running"
 fi
+eth1_ip=$(ifconfig eth1 | grep 'inet.*netmask.*broadcast' | awk '{print $2}')
+if [[ $eth1_ip ]]; then
+    echo "${grn}eth1 interface has IP address: ${cyn}$eth1_ip"
+else
+    echo "${red}eth1 interface does NOT have an IP address"
+fi
 
 # Download package
 echo ""
