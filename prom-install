@@ -55,7 +55,6 @@ mv prometheus.yml /etc/prometheus/
 mv prometheus promtool /usr/local/bin/
 
 # Set directoy and file owner:group
-
 chown -R prometheus:prometheus /etc/prometheus/
 chown prometheus:prometheus /var/lib/prometheus
 chown prometheus:prometheus /usr/local/bin/prometheus
