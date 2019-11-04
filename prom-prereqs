@@ -1,0 +1,71 @@
+#!/bin/bash
+
+# Text color
+red=$'\e[1;31m'
+grn=$'\e[1;32m'
+mag=$'\e[1;35m'
+cyn=$'\e[1;36m'
+wht=$'\e[1;0m'
+
+
+echo ""
+echo "${cyn}YUM UPDATE...${wht}"
+sleep 1
+echo ""
+yum update -y
+
+echo ""
+echo ""
+echo "${cyn}YUM INSTALL wget vim tmux which...${wht}"
+sleep 1
+echo ""
+yum install -y wget vim tmux which
+
+echo ""
+echo ""
+echo "${cyn}GIT INSTALLATION:${wht}"
+echo "${cyn}  - YUM INSTALL Development Tools...${wht}"
+sleep 1
+echo ""
+yum groupinstall -y "Development Tools"
+
+echo ""
+echo ""
+echo "${cyn}  - YUM INSTALL extra devel packages...${wht}"
+sleep 1
+echo ""
+yum install -y gettext-devel openssl-devel perl-CPAN perl-devel zlib-devel
+
+echo ""
+echo ""
+echo "${cyn}  - YUM REMOVE git 1.x...${wht}"
+sleep 1
+echo ""
+yum remove -y git
+
+echo ""
+echo ""
+echo "${cyn}  - YUM INSTALL git 2.x...${wht}"
+sleep 1
+echo ""
+yum install -y https://centos7.iuscommunity.org/ius-release.rpm
+yum install -y git2u-all
+echo "${mag}git --version: $(git --version)${wht}"
+
+echo ""
+echo ""
+echo "${cyn}git clone prometheus-install${wht}"
+sleep 1
+echo ""
+git clone https://github.com/Shortrope/prometheus-install.git
+cd prometheus-install
+chmod +x prom-*
+cp prom-install prom-checks prom-uninstall /usr/local/bin/
+
+echo ""
+echo ""
+echo "${cyn}Please Reboot and run ${cyn}prom-install${wht}"
+echo ""
+echo ""
+
+
