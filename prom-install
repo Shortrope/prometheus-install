@@ -11,10 +11,10 @@ if [[ $# != 4 ]]; then
     exit 1
 fi
 
-version=$1
-ipaddr=$2
-mask=$3
-gateway=$4
+prometheus_version=$1
+bridged_nic_ipaddr=$2
+bridged_nic_subnet_mask=$3
+bridged_nic_default_gateway=$4
 
 
 # Create ifcfg-eth1 file
@@ -23,9 +23,9 @@ DEVICE=eth1
 NAME="eth1"
 TYPE=Ethernet
 BOOTPROTO=static
-IPADDR=$ipaddr
-NETMASK=$mask
-GATEWAY=$gateway
+IPADDR=$bridged_nic_ipaddr
+NETMASK=$bridged_nic_subnet_mask
+GATEWAY=$bridged_nic_default_gateway
 DNS1="8.8.8.8"
 ONBOOT=yes
 NM_CONTROLLED=no
@@ -38,8 +38,8 @@ ifup eth1
 
 # Download and extract Prometheus package
 cd /tmp
-wget https://github.com/prometheus/prometheus/releases/download/v${version}/prometheus-${version}.linux-amd64.tar.gz
-tar -xvf prometheus-${version}.linux-amd64.tar.gz
+wget https://github.com/prometheus/prometheus/releases/download/v${prometheus_version}/prometheus-${prometheus_version}.linux-amd64.tar.gz
+tar -xvf prometheus-${prometheus_version}.linux-amd64.tar.gz
 
 # Create Prometheus User
 useradd --no-create-home --shell /bin/false prometheus
@@ -49,7 +49,7 @@ mkdir /etc/prometheus
 mkdir /var/lib/prometheus
 
 # Move files to proper locations
-cd /tmp/prometheus-${version}.linux-amd64  
+cd /tmp/prometheus-${prometheus_version}.linux-amd64  
 mv console* /etc/prometheus/
 mv prometheus.yml /etc/prometheus/
 mv prometheus promtool /usr/local/bin/
