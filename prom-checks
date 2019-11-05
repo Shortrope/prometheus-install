@@ -1,7 +1,6 @@
 #!/bin/bash
 ## File: prom-checks
 
-prometheus_version=2.13.1
 
 # Text color
 red=$'\e[1;31m'
@@ -33,12 +32,8 @@ fi
 # Download package
 echo ""
 echo "${wht}Check prometheus package downloaded and extracted:"
-for d in /tmp/*; do
-    if [[ $d =~ /tmp/prometheus-[0-9].[0-9][0-9].[0-9].linux-amd64 ]]; then
-        break;
-    fi
-done
-if ((${#BASH_REMATCH[@]} > 0)); then
+prometheus_version=$(prometheus --version 2>&1 | head -n1 | awk '{print $3}')
+if [[ -d /tmp/prometheus-${prometheus_version}.linux-amd64 ]]; then
     echo "${grn}Prometheus package downloaded and extracted"
 else
     echo "${red}Prometheus package NOT downloaded and extracted"
