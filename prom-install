@@ -15,8 +15,23 @@ prometheus_version=$1
 bridged_nic_ipaddr=$2
 bridged_nic_subnet_mask=$3
 bridged_nic_default_gateway=$4
+clean_install="true"
+
+# Text color
+red=$'\e[1;31m'
+grn=$'\e[1;32m'
+mag=$'\e[1;35m'
+cyn=$'\e[1;36m'
+wht=$'\e[1;0m'
 
 
+# Check that eth1 exists
+ifconfig eth1 > /dev/null 2>&1
+if [[ $? != 0 ]]; then
+    echo "${red}[!]    ${wht}Interface 'eth1' does NOT exist!"
+    echo ""
+    exit 1
+fi
 # Create ifcfg-eth1 file
 cat << EOF > /etc/sysconfig/network-scripts/ifcfg-eth1
 DEVICE=eth1
@@ -34,12 +49,29 @@ DEFROUTE="yes"
 IPV6INIT="no"
 EOF
 
-ifup eth1
+ifup eth1 2> /dev/null
+# Check eth1 is up and running
+if [[ $(ifconfig eth1 2> /dev/null | grep RUNNING| wc -l) != 1 ]]; then
+    echo "${red}[!]    ${wht}Interface 'eth1' is NOT up and running"
+    clean_install="false"
+fi
 
 # Download and extract Prometheus package
 cd /tmp
 wget https://github.com/prometheus/prometheus/releases/download/v${prometheus_version}/prometheus-${prometheus_version}.linux-amd64.tar.gz
+if [[ $? != 0 ]]; then
+    echo "${red}[!]    ${wht}Failed to download the Prometheus package!"
+    echo ""
+    clean_install="false"
+    exit 2
+fi
 tar -xvf prometheus-${prometheus_version}.linux-amd64.tar.gz
+if [[ $? != 0 ]]; then
+    echo "${red}[!]    ${wht}Failed to unzip the Prometheus package!"
+    echo ""
+    clean_install="false"
+    exit 3
+fi
 
 # Create Prometheus User
 useradd --no-create-home --shell /bin/false prometheus
@@ -80,6 +112,19 @@ ExecStart=/usr/local/bin/prometheus \
 [Install]
 WantedBy=multi-user.target
 EOF
+
 systemctl daemon-reload
 systemctl enable prometheus
 systemctl start prometheus
+
+echo ""
+echo ""
+if [[ $clean_install == "true" ]]; then
+    echo "${grn}[ok]    ${wht}Installation complete!"
+else
+    echo "${mag}[?]    ${wht}Installation complete! Please review any errors."
+fi
+echo "        Run ${cyn}'prom-checks'${wht} to verifiy installation"
+echo ""
+echo ""
+
