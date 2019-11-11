@@ -1,0 +1,103 @@
+#!/bin/bash
+## File: node-checks
+
+
+# Text color
+red=$'\e[1;31m'
+grn=$'\e[1;32m'
+mag=$'\e[1;35m'
+cyn=$'\e[1;36m'
+wht=$'\e[1;0m'
+
+
+# Config eth1
+echo "${wht}Check bridged NIC:"
+if [[ -e /etc/sysconfig/network-scripts/ifcfg-eth1 ]]; then
+    echo "${grn}ifcfg-eth1 exists"
+else
+    echo "${red}ifcfg-eth1 does NOT exist"
+fi
+if [[ $(ifconfig eth1 | grep RUNNING| wc -l) == 1 ]]; then
+    echo "${grn}eth1 interface up and running"
+else
+    echo "${red}eth1 interface NOT up and running"
+fi
+eth1_ip=$(ifconfig eth1 | grep 'inet.*netmask.*broadcast' | awk '{print $2}')
+if [[ $eth1_ip ]]; then
+    echo "${grn}eth1 interface has IP address: ${cyn}$eth1_ip"
+else
+    echo "${red}eth1 interface does NOT have an IP address"
+fi
+
+# Download package
+echo ""
+echo "${wht}Check node_exporter package downloaded and extracted:"
+node_exporter_version=$(node_exporter --version 2>&1 | head -n1 | awk '{print $3}')
+if [[ -d /tmp/node_exporter-${node_exporter_version}.linux-amd64 ]]; then
+    echo "${grn}node_exporter package downloaded and extracted"
+else
+    echo "${red}node_exporter package NOT downloaded and extracted"
+fi
+
+# create node_exporter user
+echo ""
+echo "${wht}Check node_exporter user created:"
+if id node_exporter > /dev/null 2>&1; then
+    echo "${grn}'node_exporter' user exists"
+else
+    echo "${red}'node_exporter' user does NOT exist"
+fi
+
+
+# node_exporter service files
+node_exporter_files=(/usr/local/bin/node_exporter)
+
+echo ""
+echo "${wht}Check file owner:group:"
+for f in ${node_exporter_files[@]}; do
+    if [[ -f $f ]] &&
+       [[ $(stat -c %U $f) == "node_exporter" ]] &&
+       [[ $(ls -l $f | awk '{print $4}') == "node_exporter" ]]; then
+         echo "${grn}$f  Goot"
+    else
+         echo "${red}$f  NOT goot"
+    fi
+done
+
+echo ""
+echo "${wht}Check executable files:"
+for f in ${node_exporter_files[@]}; do
+    if [[ -x $f ]]; then
+         echo "${grn}$f  executable"
+    else
+         echo "${red}$f  NOT executable"
+    fi
+done
+
+# Check node_exporter is enabled and running
+echo ""
+echo "${wht}Check systemd service:"
+if [[ -f /etc/systemd/system/node_exporter.service ]]; then
+    echo "${grn}node_exporter.service file exists"
+else
+    echo "${red}node_exporter.service file does NOT exist"
+fi
+
+if [[ -L /etc/systemd/system/multi-user.target.wants/node_exporter.service ]]; then
+    echo "${grn}node_exporter service is enabled"
+else
+    echo "${red}node_exporter service is NOT enabled"
+fi
+
+systemctl is-active --quiet node_exporter &&
+    echo "${grn}node_exporter service is running" ||
+    echo "${red}node_exporter service is NOT running"
+
+
+echo ""
+echo ""
+
+
+
+echo "${wht}"
+
