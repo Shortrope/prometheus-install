@@ -1,0 +1,15 @@
+#!/bin/bash
+## File: node-uninstall-deb
+
+
+rm -rf /tmp/node_exporter*
+
+# must stop the node_exporter service before removing the node_exporter user
+systemctl stop node_exporter
+systemctl disable node_exporter
+rm /etc/systemd/system/node_exporter.service
+
+userdel node_exporter
+
+rm /usr/local/bin/node_exporter
+
