@@ -1,10 +1,10 @@
 #!/bin/bash
-## File: node-install
+## File: node-install-deb
 
 # Check for parameters: version
 if [[ $# != 1 ]]; then
     echo ""
-    echo "  Usage: node-install <node_exporter version> 
+    echo "  Usage: node-install <node_exporter version>"
     echo ""
     echo "      version: node_exporter version to install. see https://prometheus.io/download"
     echo ""
