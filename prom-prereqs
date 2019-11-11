@@ -9,6 +9,10 @@ wht=$'\e[1;0m'
 
 
 echo ""
+echo "${cyn}This script will YUM UPGrade and install git and some other utils... ${wht}"
+sleep 3
+echo ""
+echo ""
 echo "${cyn}YUM UPDATE...${wht}"
 sleep 1
 echo ""
