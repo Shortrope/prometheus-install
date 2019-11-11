@@ -1,0 +1,95 @@
+#!/bin/bash
+## File: node-install
+
+# Check for parameters: version
+if [[ $# != 1 ]]; then
+    echo ""
+    echo "  Usage: node-install <node_exporter version> 
+    echo ""
+    echo "      version: node_exporter version to install. see https://prometheus.io/download"
+    echo ""
+    echo "Latest version as of 11/11/2019: 0.18.1"
+    echo ""
+    exit 1
+fi
+
+node_exporter_version=$1
+clean_install="true"
+
+# Text color
+red=$'\e[1;31m'
+grn=$'\e[1;32m'
+mag=$'\e[1;35m'
+cyn=$'\e[1;36m'
+wht=$'\e[1;0m'
+
+
+
+# Download and extract node_exporter package
+cd /tmp
+wget https://github.com/prometheus/node_exporter/releases/download/v${node_exporter_version}/node_exporter-${node_exporter_version}.linux-amd64.tar.gz
+if [[ $? != 0 ]]; then
+    echo "${red}[!]    ${wht}Failed to download the node_exporter package!"
+    echo ""
+    clean_install="false"
+    exit 2
+fi
+tar -xvf node_exporter-${node_exporter_version}.linux-amd64.tar.gz
+if [[ $? != 0 ]]; then
+    echo "${red}[!]    ${wht}Failed to unzip the node_exporter package!"
+    echo ""
+    clean_install="false"
+    exit 3
+fi
+
+# Create node_exporter User
+useradd --no-create-home --shell /bin/false node_exporter
+
+# Move files to proper locations
+cd /tmp/node_exporter-${node_exporter_version}.linux-amd64  
+mv node_exporter /usr/local/bin/
+
+# Set directoy and file owner:group
+chown node_exporter:node_exporter /usr/local/bin/node_exporter
+
+# Create service file
+cat <<EOF > /etc/systemd/system/node_exporter.service
+[Unit]
+Description=Node Exporter
+After=network-online.target
+
+[Service]
+User=node_exporter
+Group=node_exporter
+Type=simple
+ExecStart=/usr/local/bin/node_exporter
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable node_exporter
+systemctl start node_exporter
+
+echo ""
+echo ""
+if [[ $clean_install == "true" ]]; then
+    echo "${grn}[ok]    ${wht}Installation complete!"
+    echo "Run ${cyn}'node-checks'${wht} to verifiy installation"
+    echo ""
+    echo "Add the node_exporter endpoint to the prometheus.yml file"
+    echo "${cyn}"
+    echo "    - job_name: 'node_exporter'"
+    echo "      static_configs"
+    echo "      - targets: ['${bridged_nic_ipaddr}:9100'"
+    echo "${wht}"
+    echo "Restart prometheus: '${cyn}systemctl restart prometheus${wht}'"
+    
+else
+    echo "${mag}[?]    ${wht}Installation complete! Please review any errors."
+    echo "Run ${cyn}'node-checks'${wht} to verifiy installation"
+fi
+echo ""
+echo ""
+

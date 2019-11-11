@@ -1,0 +1,50 @@
+#!/bin/bash
+
+# Text color
+red=$'\e[1;31m'
+grn=$'\e[1;32m'
+mag=$'\e[1;35m'
+cyn=$'\e[1;36m'
+wht=$'\e[1;0m'
+
+
+echo ""
+echo "${cyn}This script will apt UPGrade and install git and some other utils... ${wht}"
+sleep 3
+echo ""
+echo ""
+echo "${cyn}APT UPDATE/UPGRADE...${wht}"
+sleep 1
+echo ""
+apt update && apt upgrade -y
+
+echo ""
+echo ""
+echo "${cyn}APT INSTALL vim tmux curl ...${wht}"
+sleep 1
+echo ""
+apt install -y curl vim tmux 
+
+echo ""
+echo ""
+echo "${cyn}  - APT INSTALL git 2.x...${wht}"
+sleep 1
+echo ""
+apt install -y git
+echo "${mag}git --version: $(git --version)${wht}"
+
+echo ""
+echo ""
+echo "${cyn}git clone prometheus-install${wht}"
+sleep 1
+echo ""
+git clone https://github.com/Shortrope/prometheus-install.git
+ls -l /root/prometheus-install/
+
+echo ""
+echo ""
+echo "${cyn}Please Reboot and run ${cyn}prom-install${wht}"
+echo ""
+echo ""
+
+
