@@ -1,4 +1,5 @@
 #!/bin/bash
+# deb-prereqs
 
 # Text color
 red=$'\e[1;31m'
@@ -38,9 +39,9 @@ echo ""
 echo "${cyn}git clone prometheus-install${wht}"
 sleep 1
 echo ""
-git clone https://github.com/Shortrope/prometheus-install.git
-ls -l /root/prometheus-install/
-
+if [[ ! -d /root/prometheus-install ]]; then
+  git clone https://github.com/Shortrope/prometheus-install.git
+fi
 echo ""
 echo ""
 echo "${cyn}Please Reboot and run ${cyn}prom-install${wht}"
