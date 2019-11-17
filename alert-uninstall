@@ -1,0 +1,19 @@
+#!/bin/bash
+## File: alert-uninstall
+
+rm -rf /tmp/alertmanager*
+
+# must stop the prometheus service before removing the prometheus user
+systemctl stop alertmanager
+systemctl disable alertmanager
+rm /etc/systemd/system/alertmanager.service
+
+userdel alertmanager
+
+rm -rf /etc/alertmanager
+
+rm /usr/local/bin/alertmanager
+rm /usr/local/bin/amtool
+
+mv /etc/prometheus/prometheus.yml.alert-bak /etc/prometheus/prometheus.yml
+

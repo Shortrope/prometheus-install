@@ -1,0 +1,114 @@
+#!/bin/bash
+## File: alert-install
+
+# Text color
+red=$'\e[1;31m'
+grn=$'\e[1;32m'
+mag=$'\e[1;35m'
+cyn=$'\e[1;36m'
+wht=$'\e[1;0m'
+
+
+# Check for parameters: version
+if [[ $# != 1 ]]; then
+    echo ""
+    echo "  Usage: alert-install <version>"
+    echo ""
+    echo "      version: alert-manager version to install. see https://prometheus.io/download"
+    echo "      Latest version as of 11/16/2019: ${cyn}0.19.0${wht}"
+    echo ""
+    echo ""
+    exit 1
+fi
+
+alertmanager_version=$1
+clean_install="true"
+
+
+# Download and extract alertmanager package
+cd /tmp
+wget https://github.com/prometheus/alertmanager/releases/download/v${alertmanager_version}/alertmanager-${alertmanager_version}.linux-amd64.tar.gz
+if [[ $? != 0 ]]; then
+    echo "${red}[!]    ${wht}Failed to download the alertmanager package!"
+    echo ""
+    clean_install="false"
+    exit 2
+fi
+tar -xvf alertmanager-${alertmanager_version}.linux-amd64.tar.gz
+if [[ $? != 0 ]]; then
+    echo "${red}[!]    ${wht}Failed to unzip the alertmanager package!"
+    echo ""
+    clean_install="false"
+    exit 3
+fi
+
+# Create alertmanager User
+useradd --no-create-home --shell /bin/false alertmanager
+
+# Move files to proper locations
+mkdir /etc/alertmanager
+cd /tmp/alertmanager-${alertmanager_version}.linux-amd64  
+mv alertmanager.yml /etc/alertmanager/
+mv alertmanager /usr/local/bin/
+mv amtool /usr/local/bin/
+
+# Set directoy and file owner:group
+chown -R alertmanager:alertmanager /etc/alertmanager
+chown alertmanager:alertmanager /usr/local/bin/alertmanager
+chown alertmanager:alertmanager /usr/local/bin/amtool
+
+# Create service file
+cat <<EOF > /etc/systemd/system/alertmanager.service
+[Unit]
+Description=Alertmanager
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=alertmanager
+Group=alertmanager
+Type=simple
+WorkingDirectory=/etc/alertmanager
+ExecStart=/usr/local/bin/alertmanager \
+    --config.file=/etc/alertmanager/alertmanager.yml
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Edit the prometheus.yml config
+systemctl stop prometheus
+sed -i.alert-bak 's/# - alertmanager:9093/- localhost:9093/' /etc/prometheus/prometheus.yml
+
+# Start services
+systemctl daemon-reload
+systemctl start prometheus
+systemctl start alertmanager
+systemctl enable alertmanager
+
+
+# Finish 
+echo ""
+echo ""
+if [[ $clean_install == "true" ]]; then
+    echo "${grn}[ok]    ${wht}Installation complete!"
+    echo "Run ${cyn}'alert-checks'${wht} to verifiy installation"
+    echo ""
+    echo "Check the alertmanager endpoint to the prometheus.yml file"
+    echo "${cyn}"
+    echo "    # Alertmanager configuration"
+    echo "    alerting:"
+    echo "      alertmanagers:"
+    echo "      - static_configs:"
+    echo "        - targets:"
+    echo "          - localhost:9093"
+    echo "${wht}"
+    echo "Restart prometheus: '${cyn}systemctl restart prometheus${wht}'"
+    
+else
+    echo "${mag}[?]    ${wht}Installation complete! Please review any errors."
+    echo "Run ${cyn}'alert-checks'${wht} to verifiy installation"
+fi
+echo ""
+echo ""
+

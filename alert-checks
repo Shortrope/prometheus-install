@@ -1,0 +1,122 @@
+#!/bin/bash
+## File: alert-checks
+
+
+# Text color
+red=$'\e[1;31m'
+grn=$'\e[1;32m'
+mag=$'\e[1;35m'
+cyn=$'\e[1;36m'
+wht=$'\e[1;0m'
+
+
+# Config eth1
+echo "${wht}Check bridged NIC:"
+if [[ -e /etc/sysconfig/network-scripts/ifcfg-eth1 ]]; then
+    echo "${grn}ifcfg-eth1 exists"
+else
+    echo "${red}ifcfg-eth1 does NOT exist"
+fi
+if [[ $(ifconfig eth1 | grep RUNNING| wc -l) == 1 ]]; then
+    echo "${grn}eth1 interface up and running"
+else
+    echo "${red}eth1 interface NOT up and running"
+fi
+eth1_ip=$(ifconfig eth1 | grep 'inet.*netmask.*broadcast' | awk '{print $2}')
+if [[ $eth1_ip ]]; then
+    echo "${grn}eth1 interface has IP address: ${cyn}$eth1_ip"
+else
+    echo "${red}eth1 interface does NOT have an IP address"
+fi
+
+# Download package
+echo ""
+echo "${wht}Check alertmanager package downloaded and extracted:"
+alertmanager_version=$(alertmanager --version 2>&1 | head -n1 | awk '{print $3}')
+if [[ -d /tmp/alertmanager-${alertmanager_version}.linux-amd64 ]]; then
+    echo "${grn}Prometheus package downloaded and extracted"
+else
+    echo "${red}Prometheus package NOT downloaded and extracted"
+fi
+
+# create Prometheus user
+echo ""
+echo "${wht}Check alertmanager user created:"
+if id alertmanager > /dev/null 2>&1; then
+    echo "${grn}'alertmanager' user exists"
+else
+    echo "${red}'alertmanager' user does NOT exist"
+fi
+
+
+# alertmanager service files
+alertmanager_dirs=(/etc/alertmanager)
+alertmanager_files=(/etc/alertmanager/alertmanager.yml /usr/local/bin/alertmanager /usr/local/bin/amtool)
+
+echo ""
+echo "${wht}Check directory owner:group:"
+for d in ${alertmanager_dirs[@]}; do
+    if [[ -d $d ]] && 
+       [[ $(stat -c %U $d) == "alertmanager" ]] &&
+       [[ $(ls -ld $d | awk '{print $4}') == "alertmanager" ]]; then
+         echo "${grn}$d  Goot"
+    else
+         echo "${red}$d  NOT goot"
+    fi
+done
+
+echo ""
+echo "${wht}Check file owner:group:"
+for f in ${alertmanager_files[@]}; do
+    if [[ -f $f ]] &&
+       [[ $(stat -c %U $f) == "alertmanager" ]] &&
+       [[ $(ls -l $f | awk '{print $4}') == "alertmanager" ]]; then
+         echo "${grn}$f  Goot"
+    else
+         echo "${red}$f  NOT goot"
+    fi
+done
+
+echo ""
+echo "${wht}Check executable files:"
+for f in ${alertmanager_files[@]}; do
+    if [[ -x $f ]]; then
+         echo "${grn}$f  executable"
+    else
+         if [[ $f == "/etc/alertmanager/alertmanager.yml" ]]; then continue; fi
+         echo "${red}$f  NOT executable"
+    fi
+done
+
+# Check prometheus.yml has alert manager 
+echo ""
+echo "${wht}Check prometheus.yml includes '9093':"
+grep 'localhost:9093' /etc/prometheus/prometheus.yml
+
+# Check alertmanager.service is enabled and running
+echo ""
+echo "${wht}Check systemd service:"
+if [[ -f /etc/systemd/system/alertmanager.service ]]; then
+    echo "${grn}alertmanager.service file exists"
+else
+    echo "${red}alertmanager.service file does NOT exist"
+fi
+
+if [[ -L /etc/systemd/system/multi-user.target.wants/alertmanager.service ]]; then
+    echo "${grn}alertmanager service is enabled"
+else
+    echo "${red}alertmanager service is NOT enabled"
+fi
+
+systemctl is-active --quiet alertmanager &&
+    echo "${grn}alertmanager service is running" ||
+    echo "${red}alertmanager service is NOT running"
+
+
+echo ""
+echo ""
+
+
+
+echo "${wht}"
+
