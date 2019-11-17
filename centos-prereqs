@@ -1,0 +1,128 @@
+#!/bin/bash
+# centos-prereqs
+
+# Text color
+red=$'\e[1;31m'
+grn=$'\e[1;32m'
+mag=$'\e[1;35m'
+cyn=$'\e[1;36m'
+wht=$'\e[1;0m'
+
+
+if [[ $# != 3 ]]; then
+    echo ""
+    echo "  Usage: centos-prereqs <ip-addr> <mask> <gateway>"
+    echo ""
+    echo "      ip-addr, mask and gateway: the ip address info to be assigned to the bridged NIC"
+    echo "      'mask' is in x.x.x.x form, e.g. 255.255.255.0"
+    echo ""
+    exit 1
+fi
+
+bridged_nic_ipaddr=$1
+bridged_nic_subnet_mask=$2
+bridged_nic_default_gateway=$3
+
+
+
+echo ""
+echo "${cyn}This script will YUM UPGrade and install git and some other utils... ${wht}"
+sleep 3
+echo ""
+echo ""
+echo "${cyn}YUM UPDATE...${wht}"
+sleep 1
+echo ""
+yum update -y
+
+echo ""
+echo ""
+echo "${cyn}YUM INSTALL wget vim tmux which...${wht}"
+sleep 1
+echo ""
+yum install -y wget vim tmux which
+
+echo ""
+echo ""
+echo "${cyn}GIT INSTALLATION:${wht}"
+echo "${cyn}  - YUM INSTALL Development Tools...${wht}"
+sleep 1
+echo ""
+yum groupinstall -y "Development Tools"
+
+echo ""
+echo ""
+echo "${cyn}  - YUM INSTALL extra devel packages...${wht}"
+sleep 1
+echo ""
+yum install -y gettext-devel openssl-devel perl-CPAN perl-devel zlib-devel
+
+echo ""
+echo ""
+echo "${cyn}  - YUM REMOVE git 1.x...${wht}"
+sleep 1
+echo ""
+yum remove -y git
+
+echo ""
+echo ""
+echo "${cyn}  - YUM INSTALL git 2.x...${wht}"
+sleep 1
+echo ""
+yum install -y https://centos7.iuscommunity.org/ius-release.rpm
+yum install -y git2u-all
+echo "${mag}git --version: $(git --version)${wht}"
+
+echo ""
+echo ""
+echo "${cyn}git clone prometheus-install${wht}"
+sleep 1
+echo ""
+if [[ ! -d /root/prometheus-install ]]; then
+  git clone https://github.com/Shortrope/prometheus-install.git
+  cd prometheus-install
+  chmod +x *
+  cp prom-install prom-checks prom-uninstall /usr/local/bin/
+fi
+
+# Configure Bridged NIC
+# Check that eth1 exists
+ifconfig eth1 > /dev/null 2>&1
+if [[ $? != 0 ]]; then
+    echo "${red}[!]    ${wht}Interface 'eth1' does NOT exist!"
+    echo ""
+    exit 1
+fi
+# Create ifcfg-eth1 file
+cat << EOF > /etc/sysconfig/network-scripts/ifcfg-eth1
+DEVICE=eth1
+NAME="eth1"
+TYPE=Ethernet
+BOOTPROTO=static
+IPADDR=$bridged_nic_ipaddr
+NETMASK=$bridged_nic_subnet_mask
+GATEWAY=$bridged_nic_default_gateway
+DNS1="8.8.8.8"
+ONBOOT=yes
+NM_CONTROLLED=no
+IPV4_FAILURE_FATAL="no"
+DEFROUTE="yes"
+IPV6INIT="no"
+EOF
+
+ifup eth1 2> /dev/null
+# Check eth1 is up and running
+if [[ $(ifconfig eth1 2> /dev/null | grep RUNNING| wc -l) != 1 ]]; then
+    echo "${red}[!]    ${wht}Interface 'eth1' is NOT up and running"
+    clean_install="false"
+fi
+
+
+
+echo ""
+echo ""
+echo "${cyn}Please Reboot and run ${cyn}prom-install${wht}"
+echo ""
+echo ""
+
+
