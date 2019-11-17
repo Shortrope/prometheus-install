@@ -1,26 +1,6 @@
 #!/bin/bash
 ## File: node-install
 
-# Check for parameters: version, ip, mask and gateway addresses
-if [[ $# != 4 ]]; then
-    echo ""
-    echo "  Usage: node-install <version> <ip-addr> <mask> <gateway>"
-    echo ""
-    echo "      version: node_exporter version to install. see https://prometheus.io/download"
-    echo "      ip-addr, mask and gateway: the ip address info to be assigned to the bridged NIC"
-    echo "      'mask' is in x.x.x.x form, e.g. 255.255.255.0"
-    echo ""
-    echo "Latest version as of 11/10/2019: 0.18.1"
-    echo ""
-    exit 1
-fi
-
-node_exporter_version=$1
-bridged_nic_ipaddr=$2
-bridged_nic_subnet_mask=$3
-bridged_nic_default_gateway=$4
-clean_install="true"
-
 # Text color
 red=$'\e[1;31m'
 grn=$'\e[1;32m'
@@ -29,36 +9,21 @@ cyn=$'\e[1;36m'
 wht=$'\e[1;0m'
 
 
-# Check that eth1 exists
-ifconfig eth1 > /dev/null 2>&1
-if [[ $? != 0 ]]; then
-    echo "${red}[!]    ${wht}Interface 'eth1' does NOT exist!"
+# Check for parameters: version
+if [[ $# != 1 ]]; then
+    echo ""
+    echo "  Usage: node-install <version>"
+    echo ""
+    echo "      version: node_exporter version to install. see https://prometheus.io/download"
+    echo "      Latest version as of 11/10/2019: ${cyn}0.18.1${wht}"
+    echo ""
     echo ""
     exit 1
 fi
-# Create ifcfg-eth1 file
-cat << EOF > /etc/sysconfig/network-scripts/ifcfg-eth1
-DEVICE=eth1
-NAME="eth1"
-TYPE=Ethernet
-BOOTPROTO=static
-IPADDR=$bridged_nic_ipaddr
-NETMASK=$bridged_nic_subnet_mask
-GATEWAY=$bridged_nic_default_gateway
-DNS1="8.8.8.8"
-ONBOOT=yes
-NM_CONTROLLED=no
-IPV4_FAILURE_FATAL="no"
-DEFROUTE="yes"
-IPV6INIT="no"
-EOF
 
-ifup eth1 2> /dev/null
-# Check eth1 is up and running
-if [[ $(ifconfig eth1 2> /dev/null | grep RUNNING| wc -l) != 1 ]]; then
-    echo "${red}[!]    ${wht}Interface 'eth1' is NOT up and running"
-    clean_install="false"
-fi
+node_exporter_version=$1
+clean_install="true"
+
 
 # Download and extract node_exporter package
 cd /tmp
