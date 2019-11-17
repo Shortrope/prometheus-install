@@ -81,7 +81,7 @@ if [[ $clean_install == "true" ]]; then
     echo "Add the node_exporter endpoint to the prometheus.yml file"
     echo "${cyn}"
     echo "    - job_name: 'node_exporter'"
-    echo "      static_configs"
+    echo "      static_configs:"
     echo "      - targets: ['${bridged_nic_ipaddr}:9100']"
     echo "${wht}"
     echo "Restart prometheus: '${cyn}systemctl restart prometheus${wht}'"
