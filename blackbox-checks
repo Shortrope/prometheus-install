@@ -1,0 +1,99 @@
+#!/bin/bash
+## File: blackbox-checks
+
+
+# Text color
+red=$'\e[1;31m'
+grn=$'\e[1;32m'
+mag=$'\e[1;35m'
+cyn=$'\e[1;36m'
+wht=$'\e[1;0m'
+
+
+
+# Download package
+echo ""
+echo "${wht}Check blackbox_exporter package downloaded and extracted:"
+#blackbox_exporter_version=$(blackbox_exporter --version 2>&1 | head -n1 | awk '{print $3}')
+blackbox_exporter_version="0.16.0"
+if [[ -d /tmp/blackbox_exporter-${blackbox_exporter_version}.linux-amd64 ]]; then
+    echo "${grn}blackbox_exporter package downloaded and extracted"
+else
+    echo "${red}blackbox_exporter package NOT downloaded and extracted"
+fi
+
+# check blackbox user exists
+echo ""
+echo "${wht}Check blackbox user created:"
+if id blackbox > /dev/null 2>&1; then
+    echo "${grn}'blackbox' user exists"
+else
+    echo "${red}'blackbox' user does NOT exist"
+fi
+
+
+# blackbox_exporter files dirs and owner/group
+blackbox_exporter_files=(/usr/local/bin/blackbox_exporter)
+blackbox_dirs=(/etc/blackbox)
+
+echo ""
+echo "${wht}Check directory owner:group:"
+for d in ${blackbox_dirs[@]}; do
+    if [[ -d $d ]] &&
+       [[ $(stat -c %U $d) == "blackbox" ]] &&
+       [[ $(ls -ld $d | awk '{print $4}') == "blackbox" ]]; then
+           echo "${grn}$d  Goot"
+    else
+        echo "${red}$d  NOT goot"
+    fi
+done
+
+echo ""
+echo "${wht}Check file owner:group:"
+for f in ${blackbox_exporter_files[@]}; do
+    if [[ -f $f ]] &&
+       [[ $(stat -c %U $f) == "blackbox" ]] &&
+       [[ $(ls -l $f | awk '{print $4}') == "blackbox" ]]; then
+         echo "${grn}$f  Goot"
+    else
+         echo "${red}$f  NOT goot"
+    fi
+done
+
+echo ""
+echo "${wht}Check executable files:"
+for f in ${blackbox_exporter_files[@]}; do
+    if [[ -x $f ]]; then
+         echo "${grn}$f  executable"
+    else
+         echo "${red}$f  NOT executable"
+    fi
+done
+
+# Check blackbox_exporter is enabled and running
+echo ""
+echo "${wht}Check systemd service:"
+if [[ -f /etc/systemd/system/blackbox_exporter.service ]]; then
+    echo "${grn}blackbox_exporter.service file exists"
+else
+    echo "${red}blackbox_exporter.service file does NOT exist"
+fi
+
+if [[ -L /etc/systemd/system/multi-user.target.wants/blackbox_exporter.service ]]; then
+    echo "${grn}blackbox_exporter service is enabled"
+else
+    echo "${red}blackbox_exporter service is NOT enabled"
+fi
+
+systemctl is-active --quiet blackbox_exporter &&
+    echo "${grn}blackbox_exporter service is running" ||
+    echo "${red}blackbox_exporter service is NOT running"
+
+
+echo ""
+echo ""
+
+
+
+echo "${wht}"
+

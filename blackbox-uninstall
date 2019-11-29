@@ -1,0 +1,16 @@
+#!/bin/bash
+## File: blackbox-uninstall
+
+rm -rf /tmp/blackbox*
+
+# must stop the blackbox service before removing the blackbox user
+systemctl stop blackbox_exporter
+systemctl disable blackbox_exporter
+rm /etc/systemd/system/blackbox_exporter.service
+
+userdel blackbox
+
+rm -rf /etc/blackbox
+
+rm /usr/local/bin/blackbox_exporter
+

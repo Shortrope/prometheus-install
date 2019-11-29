@@ -1,0 +1,131 @@
+#!/bin/bash
+## File: blackbox-install
+
+# Text color
+red=$'\e[1;31m'
+grn=$'\e[1;32m'
+mag=$'\e[1;35m'
+cyn=$'\e[1;36m'
+wht=$'\e[1;0m'
+
+
+# Check for parameters: version
+if [[ $# != 1 ]]; then
+    echo ""
+    echo "  Usage: blackbox-install <version>"
+    echo ""
+    echo "      version: blackbox_exporter version to install. see https://prometheus.io/download"
+    echo "      Latest version as of 11/28/2019: ${cyn}0.16.0${wht}"
+    echo ""
+    echo ""
+    exit 1
+fi
+
+node_exporter_version=$1
+clean_install="true"
+
+
+# Download and extract blackbox_exporter package
+cd /tmp
+wget https://github.com/prometheus/blackbox_exporter/releases/download/v${node_exporter_version}/blackbox_exporter-${node_exporter_version}.linux-amd64.tar.gz
+if [[ $? != 0 ]]; then
+    echo "${red}[!]    ${wht}Failed to download the blackbox_exporter package!"
+    echo ""
+    clean_install="false"
+    exit 2
+fi
+tar -xvf blackbox_exporter-${node_exporter_version}.linux-amd64.tar.gz
+if [[ $? != 0 ]]; then
+    echo "${red}[!]    ${wht}Failed to unzip the blackbox_exporter package!"
+    echo ""
+    clean_install="false"
+    exit 3
+fi
+
+# Create blackbox_exporter User
+useradd --no-create-home --shell /bin/false blackbox
+
+# Move files to proper locations
+cd /tmp/blackbox_exporter-${node_exporter_version}.linux-amd64  
+mv blackbox_exporter /usr/local/bin/
+mkdir /etc/blackbox
+mv blackbox.yml /etc/blackbox/
+
+# Set directoy and file owner:group
+chown blackbox:blackbox /usr/local/bin/blackbox_exporter
+chown -R blackbox:blackbox /etc/blackbox
+
+# Create service file
+cat <<EOF > /etc/systemd/system/blackbox_exporter.service
+[Unit]
+Description=Blackbox Exporter
+After=network-online.target
+
+[Service]
+User=blackbox
+Group=blackbox
+Type=simple
+ExecStart=/usr/local/bin/blackbox_exporter --config.file /etc/blackbox/blackbox.yml
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# blackbox.yml
+mv /etc/blackbox/blackbox.yml /etc/blackbox/blackbox.yml.orig
+cat <<EOF > /etc/blackbox/blackbox.yml
+modules:
+  http_2xx:
+    prober: http
+    timeout: 5s
+    http:
+      valid_http_versions: ["HTTP/1.1", "HTTP/2"]
+      preferred_ip_protocol: "ip4"
+EOF
+
+
+systemctl daemon-reload
+systemctl enable blackbox_exporter
+systemctl start blackbox_exporter
+
+echo ""
+echo ""
+if [[ $clean_install == "true" ]]; then
+    echo "${grn}[ok]    ${wht}Installation complete!"
+    echo "Run ${cyn}'blackbox-checks'${wht} to verifiy installation"
+    echo ""
+    echo "Add the blackbox_exporter address (localhost:9115) to the prometheus job in prometheus.yml file"
+    echo "${cyn}"
+    echo "    - job_name: 'prometheus'"
+    echo "      static_configs:"
+    echo "      - targets: ['localhost:9100', 'localhost:9115']"
+    echo "${wht}"
+    echo ""
+    echo "Add the blackbox_exporter job/targets to the prometheus.yml file"
+    echo "${cyn}"
+    echo "    - job_name: 'blackbox'"
+    echo "      metrics_path: /probe"
+    echo "      params:"
+    echo "        module: [http_2xx]"
+    echo "      static_configs:"
+    echo "      - targets:"
+    echo "        - https://shortrope.com"
+    echo "        - mysite.com"
+    echo "      relabel_configs:"
+    echo "      - source_labels: [__address__]"
+    echo "        target_label: __param_target"
+    echo "      - source_labels: [__param_target]"
+    echo "        target_label: instance"
+    echo "      - target_label: __address__"
+    echo "        replacement: 127.0.0.1:9115  # The blackbox exporter's real hostname:port."
+    echo "${wht}"
+
+    echo "Restart prometheus: '${cyn}systemctl restart prometheus${wht}'"
+    
+else
+    echo "${mag}[?]    ${wht}Installation complete! Please review any errors."
+    echo "Run ${cyn}'blackbox-checks'${wht} to verifiy installation"
+fi
+echo ""
+echo ""
+#
