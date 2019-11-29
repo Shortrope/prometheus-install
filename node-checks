@@ -49,8 +49,22 @@ else
 fi
 
 
-# node_exporter service files
+# node_exporter files
 node_exporter_files=(/usr/local/bin/node_exporter)
+node_exporter_dirs=(/var/lib/node_exporter)
+
+echo ""
+echo "${wht}Check directory owner:group:"
+for d in ${node_exporter_dirs[@]}; do
+    if [[ -d $d ]] &&
+       [[ $(stat -c %U $d) == "node_exporter" ]] &&
+       [[ $(ls -ld $d | awk '{print $4}') == "node_exporter" ]]; then
+           echo "${grn}$d  Goot"
+    else
+        echo "${red}$d  NOT goot"
+    fi
+done
+
 
 echo ""
 echo "${wht}Check file owner:group:"

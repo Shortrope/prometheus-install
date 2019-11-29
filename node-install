@@ -48,9 +48,11 @@ useradd --no-create-home --shell /bin/false node_exporter
 # Move files to proper locations
 cd /tmp/node_exporter-${node_exporter_version}.linux-amd64  
 mv node_exporter /usr/local/bin/
+mkdir /var/lib/node_exporter
 
 # Set directoy and file owner:group
 chown node_exporter:node_exporter /usr/local/bin/node_exporter
+chown node_exporter:node_exporter /var/lib/node_exporter
 
 # Create service file
 cat <<EOF > /etc/systemd/system/node_exporter.service
@@ -62,7 +64,7 @@ After=network-online.target
 User=node_exporter
 Group=node_exporter
 Type=simple
-ExecStart=/usr/local/bin/node_exporter
+ExecStart=/usr/local/bin/node_exporter --collector.textfile.directory /var/lib/node_exporter
 
 [Install]
 WantedBy=multi-user.target
