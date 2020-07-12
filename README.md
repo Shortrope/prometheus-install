@@ -15,7 +15,7 @@ git --version
 Clone this repo and run the install
 ```
 git clone https://github.com/Shortrope/prometheus-install.git
-./prometheus-install/prom-install
+./prometheus-install/prom-install <options>
 ```
 ## Usage
 ### prom-install:
